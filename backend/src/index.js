@@ -34,6 +34,7 @@ app.use("*", (req, res) => {
 
 app.use(errorHandler);
 
-app.listen(3000, () => {
-	console.log("server running at  http://localhost:3000");
+const server_url = process.env.SERVER_HOST || "127.0.0.1"
+app.listen(3000, server_url,() => {
+	console.log(`server running at  http://${server_url}:3000`);
 });
