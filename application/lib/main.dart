@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:application/pages/create_category_page.dart';
 import 'package:application/widgets/category_box.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -43,12 +44,30 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     fetchCategories();
+    searchController
+        .addListener(_onSearchChanged); // Listen for changes in search field
   }
 
-  Future<void> fetchCategories() async {
-    final apiUrl = "${dotenv.env['API_URL']}/category";
+  // Fetch categories from API with optional search query
+  Future<void> fetchCategories({String searchQuery = ''}) async {
+    // Default to the categories endpoint
+    String apiUrl = "${dotenv.env['API_URL']}/category";
+
+    // If search query is provided, switch to the search endpoint
+    if (searchQuery.isNotEmpty) {
+      apiUrl = "${dotenv.env['API_URL']}/category/search";
+    }
+
+    // Create the URI with the search query (if provided)
+    final Uri uri =
+        Uri.parse(apiUrl).replace(queryParameters: {'q': searchQuery});
+
+    setState(() {
+      isLoading = true;
+    });
+
     try {
-      final response = await http.get(Uri.parse(apiUrl));
+      final response = await http.get(uri);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
@@ -69,12 +88,102 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  // Called whenever the search query changes
+  void _onSearchChanged() {
+    final query = searchController.text.trim();
+    fetchCategories(
+        searchQuery: query); // Fetch categories based on the search query
+  }
+
+  Future<bool> updateCategory(int categoryId, String newName) async {
+    final apiUrl = "${dotenv.env['API_URL']}/category/$categoryId";
+    try {
+      final response = await http.put(
+        Uri.parse(apiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'category_name': newName}),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${responseData['message']}')),
+        );
+        return true; // Success
+      } else if (response.statusCode >= 400 && response.statusCode < 500) {
+        final errorData = json.decode(response.body);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${errorData['message']}')),
+        );
+        return false; //Failure
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${response.body}')),
+        );
+        return false; //Failure
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Exception: $e')),
+      );
+      return false; // Failure
+    }
+  }
+
+  Future<void> deleteCategory(int categoryId, int index) async {
+    final confirmed = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('ລົບໝວດໝູ່'),
+        content: const Text('ທ່ານຕ້ອງການລົບໝວດໝູ່ນີ້ແທ້ ຫຼື ບໍ່?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('ຍົກເລີກ'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('ລົບ', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      // Call the API to delete the category
+      final apiUrl = "${dotenv.env['API_URL']}/category/$categoryId";
+      final response = await http.delete(Uri.parse(apiUrl));
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        // Remove the category from the list
+        setState(() {
+          categories.removeAt(index);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${responseData['message']}')),
+        );
+      } else if (response.statusCode >= 400 && response.statusCode < 500) {
+        final errorData = json.decode(response.body);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${errorData['message']}')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${response.body}')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text("Home"),
+        title: const Text("ໝວດໝູ່"),
       ),
       body: SafeArea(
         child: Padding(
@@ -93,7 +202,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       child: TextField(
                         controller: searchController,
                         decoration: const InputDecoration(
-                          hintText: 'Search...',
+                          hintText: 'ຄົ້ນຫາ...',
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(horizontal: 16),
                         ),
@@ -103,6 +212,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       icon: const Icon(Icons.clear),
                       onPressed: () {
                         searchController.clear();
+                        fetchCategories();
                       },
                     ),
                     IconButton(
@@ -110,7 +220,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       onPressed: () {
                         final query = searchController.text.trim();
                         print('Searching for: $query');
-                        // Add search functionality if needed
+                        fetchCategories(searchQuery: query);
                       },
                     ),
                   ],
@@ -126,7 +236,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       )
                     : categories.isEmpty
                         ? const Center(
-                            child: Text('No categories available.'),
+                            child: Text('ບໍ່ພົບໝວດໝູ່'),
                           )
                         : ListView.separated(
                             itemCount: categories.length,
@@ -135,13 +245,44 @@ class _MyHomePageState extends State<MyHomePage> {
                             itemBuilder: (context, index) {
                               final category = categories[index];
                               return CategoryBox(
-                                  categoryName: category['category_name']);
+                                categoryName: category['category_name'],
+                                onEdit: (newName) async {
+                                  // Handle update action
+                                  final updated = await updateCategory(
+                                      category['category_id'], newName);
+                                  if (updated) {
+                                    setState(() {
+                                      categories[index]['category_name'] =
+                                          newName; // Update the local list
+                                    });
+                                  }
+                                },
+                                onDelete: () {
+                                  deleteCategory(
+                                      category['category_id'], index);
+                                },
+                              );
                             },
                           ),
               ),
             ],
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CreateCategoryPage(),
+            ),
+          ).then((_) {
+            // Optional: Refresh the category list when returning
+            fetchCategories();
+          });
+        },
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        child: const Icon(Icons.add, color: Colors.black),
       ),
     );
   }
