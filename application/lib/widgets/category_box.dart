@@ -1,3 +1,4 @@
+import 'package:application/pages/product_page.dart';
 import 'package:flutter/material.dart';
 
 class CategoryBox extends StatefulWidget {
@@ -6,11 +7,13 @@ class CategoryBox extends StatefulWidget {
     required this.categoryName,
     required this.onDelete,
     required this.onEdit,
+    required this.categoryId,
   });
 
   final String categoryName;
   final VoidCallback onDelete;
   final Function(String newName) onEdit;
+  final int categoryId;
 
   @override
   State<CategoryBox> createState() => _CategoryBoxState();
@@ -60,7 +63,17 @@ class _CategoryBoxState extends State<CategoryBox> {
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton(
-        onPressed: () {}, // You can keep this or remove it
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ProductPage(
+                categoryId: widget.categoryId,
+                categoryName: widget.categoryName,
+              ),
+            ),
+          );
+        }, // You can keep this or remove it
         style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
           side: const BorderSide(color: Colors.grey),
