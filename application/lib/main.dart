@@ -1,10 +1,8 @@
-import 'dart:convert';
-import 'package:application/pages/category_page.dart';
-import 'package:application/pages/create_category_page.dart';
-import 'package:application/pages/unit_page.dart';
+import 'package:application/pages/category/category_page.dart';
+import 'package:application/pages/product/product_page.dart';
+import 'package:application/pages/unit/unit_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
 
 void main() async {
   // Load the .env file
@@ -38,6 +36,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0; // Track selected tab index
+  final List<String> page = ["ໝວດໝູ່", 'ສິນຄ້າ', 'ຫົວໜ່ວຍ'];
   List<dynamic> categories = [];
   bool isLoading = true;
 
@@ -46,51 +45,10 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
   }
 
-  Future<void> fetchCategories({String searchQuery = ''}) async {
-    String apiUrl = "${dotenv.env['API_URL']}/category";
-    if (searchQuery.isNotEmpty) {
-      apiUrl = "${dotenv.env['API_URL']}/category/search";
-    }
-
-    final Uri uri =
-        Uri.parse(apiUrl).replace(queryParameters: {'q': searchQuery});
-
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-      final response = await http.get(uri);
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        setState(() {
-          categories = data['data'];
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          isLoading = false;
-        });
-        print('Error: ${response.statusCode}');
-      }
-    } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-      print('Exception: $e');
-    }
-  }
-
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
-  }
-
-  Widget _buildProfileScreen() {
-    return const Center(
-      child: Text('ຂໍ້ມູນສິນຄ້າທັງໝົດ', style: TextStyle(fontSize: 20)),
-    );
   }
 
   @override
@@ -98,13 +56,13 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text("ໝວດໝູ່"),
+        title: Text(page[_selectedIndex]),
       ),
       body: IndexedStack(
         index: _selectedIndex,
         children: [
           CategoryPage(),
-          _buildProfileScreen(),
+          ProductPage(),
           UnitPage(),
         ],
       ),
@@ -125,20 +83,6 @@ class _MyHomePageState extends State<MyHomePage> {
             label: 'ຫົວໜ່ວຍ',
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const CreateCategoryPage(),
-            ),
-          ).then((_) {
-            fetchCategories();
-          });
-        },
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        child: const Icon(Icons.add, color: Colors.black),
       ),
     );
   }

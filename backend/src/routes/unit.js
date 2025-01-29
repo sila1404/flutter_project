@@ -11,7 +11,7 @@ const router = express.Router();
 
 router.get("/", selectAllUnit);
 router.get("/:uID", selectUnitByID);
-router.get("/", insertUnit);
+router.post("/", insertUnit);
 router.put("/:uID", updateUnit);
 router.delete("/:uID", deleteUnit);
 

@@ -3,30 +3,22 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 
-class CreateCategoryPage extends StatefulWidget {
-  const CreateCategoryPage({super.key});
+class CreateUnitPage extends StatefulWidget {
+  const CreateUnitPage({super.key});
 
   @override
-  State<CreateCategoryPage> createState() => _CreateCategoryPageState();
+  State<CreateUnitPage> createState() => _CreateUnitPageState();
 }
 
-class _CreateCategoryPageState extends State<CreateCategoryPage> {
+class _CreateUnitPageState extends State<CreateUnitPage> {
   // Controller for the category name input
-  final TextEditingController _categoryNameController = TextEditingController();
+  final TextEditingController _unitNameController = TextEditingController();
   bool _isLoading = false; // To show a loading indicator
 
   // Function to handle category creation
-  Future<void> _createCategory() async {
+  Future<void> _createUnit() async {
     // Get the category name from the text field
-    final categoryName = _categoryNameController.text.trim();
-
-    // Validate input
-    // if (categoryName.isEmpty) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(content: Text('Please enter a category name')),
-    //   );
-    //   return;
-    // }
+    final unitName = _unitNameController.text.trim();
 
     setState(() {
       _isLoading = true; // Show loading indicator
@@ -34,32 +26,38 @@ class _CreateCategoryPageState extends State<CreateCategoryPage> {
 
     try {
       // Send a POST request to your API
-      final apiUrl = "${dotenv.env['API_URL']}/category";
+      final apiUrl = "${dotenv.env['API_URL']}/unit";
       final response = await http.post(
         Uri.parse(apiUrl),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({'category_name': categoryName}),
+        body: json.encode({'unit_name': unitName}),
       );
 
       if (response.statusCode == 201) {
         final responseData = json.decode(response.body);
-        // Success: Category created
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${responseData['message']}')),
-        );
-        Navigator.pop(context, responseData); // Return to the previous page
+        if (mounted) {
+          // Success: Category created
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${responseData['message']}')),
+          );
+          Navigator.pop(context, responseData); // Return to the previous page
+        }
       } else {
         // Handle API errors
         final errorData = json.decode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${errorData['message']}')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${errorData['message']}')),
+          );
+        }
       }
     } catch (e) {
       // Handle exceptions
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Exception: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Exception: $e')),
+        );
+      }
     } finally {
       setState(() {
         _isLoading = false; // Hide loading indicator
@@ -72,7 +70,7 @@ class _CreateCategoryPageState extends State<CreateCategoryPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('ສ້າງໝວດໝູ່'),
+        title: const Text('ສ້າງຫົວໜ່ວຍ'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -80,11 +78,11 @@ class _CreateCategoryPageState extends State<CreateCategoryPage> {
           children: [
             // Category Name Input
             TextField(
-              controller: _categoryNameController,
+              controller: _unitNameController,
               decoration: const InputDecoration(
-                labelText: 'ຊື່ໝວດໝູ່',
+                labelText: 'ຊື່ຫົວໜ່ວຍ',
                 border: OutlineInputBorder(),
-                hintText: 'ໃສ່ຊື່ໝວດໝູ່',
+                hintText: 'ໃສ່ຊື່ຫົວໜ່ວຍ',
               ),
             ),
             const SizedBox(height: 20),
@@ -93,12 +91,12 @@ class _CreateCategoryPageState extends State<CreateCategoryPage> {
             _isLoading
                 ? const CircularProgressIndicator() // Show loading indicator
                 : ElevatedButton(
-                    onPressed: _createCategory,
+                    onPressed: _createUnit,
                     style: ElevatedButton.styleFrom(
                       minimumSize:
                           const Size(double.infinity, 50), // Full width
                     ),
-                    child: const Text('ເພີ່ມໝວດໝູ່'),
+                    child: const Text('ເພີ່ມຫົວໜ່ວຍ'),
                   ),
           ],
         ),
@@ -109,7 +107,7 @@ class _CreateCategoryPageState extends State<CreateCategoryPage> {
   @override
   void dispose() {
     // Clean up the controller
-    _categoryNameController.dispose();
+    _unitNameController.dispose();
     super.dispose();
   }
 }

@@ -8,7 +8,9 @@ function selectAllProduct(req, res) {
 		product.quantity, 
 		product.price, 
 		product.sale_price, 
-		unit.unit_name
+    unit.unit_id,
+		unit.unit_name,
+    product.category_id
 	FROM product
 	INNER JOIN unit
 	ON product.unit_id = unit.unit_id`,
@@ -33,16 +35,16 @@ function selectProductByID(req, res) {
   const { pID } = req.params;
   conn.query(
     `SELECT 
-		product.product_id, 
-		product.product_name, 
-		product.quantity, 
-		product.price, 
-		product.sale_price, 
-		unit.unit_name
-	FROM product
-	INNER JOIN unit
-	ON product.unit_id = unit.unit_id
-	WHERE product.product_id = ?
+      product.product_id, 
+      product.product_name, 
+      product.quantity, 
+      product.price, 
+      product.sale_price, 
+      unit.unit_name
+    FROM product
+    INNER JOIN unit
+    ON product.unit_id = unit.unit_id
+    WHERE product.product_id = ?
 	`,
     pID,
     (err, result) => {
@@ -70,18 +72,32 @@ function selectProductByID(req, res) {
 }
 
 function insertProduct(req, res) {
-  //TODO: continue to implement insert product logic
-  const { product_name, sale_price } = req.body;
-  if (!product_name || !sale_price) {
-    res.status(400).json({
+  const { product_name, quantity, price, sale_price, category_id, unit_id } =
+    req.body;
+  if (
+    !product_name ||
+    !sale_price ||
+    !quantity ||
+    !price ||
+    !category_id ||
+    !unit_id
+  ) {
+    return res.status(400).json({
       success: false,
       message: "ກະລຸນາໃສ່ຊື່ສິນຄ້າ ແລະ ລາຄາ",
     });
   }
 
+  if (sale_price < price) {
+    return res.status(400).json({
+      success: false,
+      message: "ກະລຸນາກຳນົດລາຄາຂາຍໃຫ້ຫຼາຍກວ່າລາຄາຊື້",
+    });
+  }
+
   conn.query(
-    "INSERT INTO product VALUES (?, ?)",
-    [product_name, sale_price],
+    "INSERT INTO product (product_name, quantity, price, sale_price, category_id, unit_id) VALUES (?, ?, ?, ?, ?, ?)",
+    [product_name, quantity, price, sale_price, category_id, unit_id],
     (err, result) => {
       if (err) {
         res.status(500).json({
@@ -99,7 +115,58 @@ function insertProduct(req, res) {
 }
 
 function updateProduct(req, res) {
-  //TODO: implement update product logic
+  const { pID } = req.params;
+  const { product_name, quantity, price, sale_price, category_id, unit_id } =
+    req.body;
+
+  // Validate required fields
+  if (
+    !product_name ||
+    !sale_price ||
+    !quantity ||
+    !price ||
+    !category_id ||
+    !unit_id
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "ກະລຸນາໃສ່ຊື່ສິນຄ້າ ແລະ ລາຄາ",
+    });
+  }
+
+  // Validate sale price is greater than purchase price
+  if (sale_price < price) {
+    return res.status(400).json({
+      success: false,
+      message: "ກະລຸນາກຳນົດລາຄາຂາຍໃຫ້ຫຼາຍກວ່າລາຄາຊື້",
+    });
+  }
+
+  // Update product in database
+  conn.query(
+    "UPDATE product SET product_name = ?, quantity = ?, price = ?, sale_price = ?, category_id = ?, unit_id = ? WHERE product_id = ?",
+    [product_name, quantity, price, sale_price, category_id, unit_id, pID],
+    (err, result) => {
+      if (err) {
+        return res.status(500).json({
+          success: false,
+          message: err.message,
+        });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "ບໍ່ພົບຂໍ້ມູນສິນຄ້າທີ່ຕ້ອງການແກ້ໄຂ",
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        message: "ສຳເລັດການແກ້ໄຂຂໍ້ມູນສິນຄ້າ",
+      });
+    }
+  );
 }
 
 function deleteProduct(req, res) {

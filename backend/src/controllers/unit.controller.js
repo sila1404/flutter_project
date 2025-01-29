@@ -51,7 +51,7 @@ function insertUnit(req, res) {
     });
   }
 
-  conn.query("INSERT INTO unit VALUES (?)", [unit_name], (err, result) => {
+  conn.query("INSERT INTO unit (unit_name) VALUES (?)", [unit_name], (err, result) => {
     if (err) {
       res.status(500).json({
         success: false,
@@ -76,7 +76,7 @@ function updateUnit(req, res) {
     });
   }
 
-  conn.query("SELECT * FROM unit WHERE unit_id = ?", cID, (err, result) => {
+  conn.query("SELECT * FROM unit WHERE unit_id = ?", uID, (err, result) => {
     if (err) {
       return res.status(500).json({
         success: false,
@@ -92,7 +92,7 @@ function updateUnit(req, res) {
     }
 
     conn.query(
-      "UPDATE category SET unit_name = ? WHERE unit_id = ?",
+      "UPDATE unit SET unit_name = ? WHERE unit_id = ?",
       [unit_name, result[0].unit_id],
       (err, result) => {
         if (err) {
@@ -130,7 +130,7 @@ function deleteUnit(req, res) {
 
     conn.query(
       "DELETE FROM unit WHERE unit_id = ?",
-      result[0].category_id,
+      result[0].unit_id,
       (err, result) => {
         if (err) {
           return res.status(500).json({

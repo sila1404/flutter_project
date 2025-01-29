@@ -1,8 +1,7 @@
-import 'package:application/pages/category/product_on_category_page.dart';
 import 'package:flutter/material.dart';
 
-class CategoryBox extends StatefulWidget {
-  const CategoryBox({
+class UnitBox extends StatefulWidget {
+  const UnitBox({
     super.key,
     required this.name,
     required this.onDelete,
@@ -16,10 +15,10 @@ class CategoryBox extends StatefulWidget {
   final int id;
 
   @override
-  State<CategoryBox> createState() => _CategoryBoxState();
+  State<UnitBox> createState() => _UnitBoxState();
 }
 
-class _CategoryBoxState extends State<CategoryBox> {
+class _UnitBoxState extends State<UnitBox> {
   bool _isEditing = false; // Track whether the box is in edit mode
   final TextEditingController _editController = TextEditingController();
 
@@ -63,17 +62,7 @@ class _CategoryBoxState extends State<CategoryBox> {
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ProductOnCategoryPage(
-                id: widget.id,
-                name: widget.name,
-              ),
-            ),
-          );
-        }, // You can keep this or remove it
+        onPressed: () {},
         style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
           side: const BorderSide(color: Colors.grey),
@@ -90,7 +79,7 @@ class _CategoryBoxState extends State<CategoryBox> {
                       controller: _editController,
                       decoration: const InputDecoration(
                         border: InputBorder.none,
-                        hintText: 'ໃສ່ຊື່ໝວດໝູ່',
+                        hintText: 'ໃສ່ຊື່ຫົວໜ່ວຍ',
                       ),
                       autofocus: true, // Automatically focus on the text field
                     ),

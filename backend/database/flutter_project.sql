@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `fluttect_projer`
+-- Database: `flutter_project`
 --
 
 -- --------------------------------------------------------
@@ -32,14 +32,6 @@ CREATE TABLE `category` (
   `category_name` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
---
--- Dumping data for table `category`
---
-
-INSERT INTO `category` (`category_id`, `category_name`) VALUES
-(1, 'ເຄື່ອງດື່ມ'),
-(2, 'ອາຫານ'),
-(3, 'ເຄື່ັອງນຸ່ງ');
 
 -- --------------------------------------------------------
 
