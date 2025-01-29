@@ -208,8 +208,8 @@ class _CategoryPageState extends State<CategoryPage> {
                           itemBuilder: (context, index) {
                             final category = categories[index];
                             return CategoryBox(
-                              categoryName: category['category_name'],
-                              categoryId: category['category_id'],
+                              name: category['category_name'],
+                              id: category['category_id'],
                               onEdit: (newName) async {
                                 final updated = await updateCategory(
                                     category['category_id'], newName);

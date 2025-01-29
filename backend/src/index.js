@@ -20,21 +20,21 @@ app.use("/api/unit", unitRoute);
 app.use("/api/product", productRoute);
 
 app.get("/", (req, res) => {
-	res.json({
-		message: "hello world",
-	});
+  res.json({
+    message: "hello world",
+  });
 });
 
 app.use("*", (req, res) => {
-	res.status(404).json({
-		success: false,
-		message: "route not found",
-	});
+  res.status(404).json({
+    success: false,
+    message: "route not found",
+  });
 });
 
 app.use(errorHandler);
 
-const server_url = process.env.SERVER_HOST || "127.0.0.1"
-app.listen(3000, server_url,() => {
-	console.log(`server running at  http://${server_url}:3000`);
+const server_url = process.env.SERVER_HOST || "127.0.0.1";
+app.listen(3000, server_url, () => {
+  console.log(`server running at  http://${server_url}:3000`);
 });

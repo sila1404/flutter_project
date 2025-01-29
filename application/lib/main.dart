@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:application/pages/category_page.dart';
 import 'package:application/pages/create_category_page.dart';
+import 'package:application/pages/unit_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
@@ -39,7 +40,6 @@ class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0; // Track selected tab index
   List<dynamic> categories = [];
   bool isLoading = true;
-  final TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
@@ -93,12 +93,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget _buildSettingsScreen() {
-    return const Center(
-      child: Text('ຂໍ້ມູນຫົວໜ່ວຍ', style: TextStyle(fontSize: 20)),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -111,7 +105,7 @@ class _MyHomePageState extends State<MyHomePage> {
         children: [
           CategoryPage(),
           _buildProfileScreen(),
-          _buildSettingsScreen(),
+          UnitPage(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -127,7 +121,7 @@ class _MyHomePageState extends State<MyHomePage> {
             label: 'ສິນຄ້າ',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.auto_awesome),
+            icon: Icon(Icons.ac_unit),
             label: 'ຫົວໜ່ວຍ',
           ),
         ],

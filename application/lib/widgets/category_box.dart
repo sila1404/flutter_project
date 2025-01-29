@@ -4,16 +4,16 @@ import 'package:flutter/material.dart';
 class CategoryBox extends StatefulWidget {
   const CategoryBox({
     super.key,
-    required this.categoryName,
+    required this.name,
     required this.onDelete,
     required this.onEdit,
-    required this.categoryId,
+    required this.id,
   });
 
-  final String categoryName;
+  final String name;
   final VoidCallback onDelete;
   final Function(String newName) onEdit;
-  final int categoryId;
+  final int id;
 
   @override
   State<CategoryBox> createState() => _CategoryBoxState();
@@ -26,7 +26,7 @@ class _CategoryBoxState extends State<CategoryBox> {
   @override
   void initState() {
     super.initState();
-    _editController.text = widget.categoryName; // Initialize the text field
+    _editController.text = widget.name; // Initialize the text field
   }
 
   @override
@@ -54,7 +54,7 @@ class _CategoryBoxState extends State<CategoryBox> {
   void _cancelEditing() {
     setState(() {
       _isEditing = false; // Switch back to read-only mode
-      _editController.text = widget.categoryName; // Reset the text field
+      _editController.text = widget.name; // Reset the text field
     });
   }
 
@@ -68,8 +68,8 @@ class _CategoryBoxState extends State<CategoryBox> {
             context,
             MaterialPageRoute(
               builder: (context) => ProductPage(
-                categoryId: widget.categoryId,
-                categoryName: widget.categoryName,
+                id: widget.id,
+                name: widget.name,
               ),
             ),
           );
@@ -114,7 +114,7 @@ class _CategoryBoxState extends State<CategoryBox> {
                 children: [
                   // Category Name (Read-Only)
                   Text(
-                    widget.categoryName,
+                    widget.name,
                     style: const TextStyle(
                       color: Colors.black,
                       fontSize: 16,
