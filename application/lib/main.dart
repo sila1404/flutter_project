@@ -1,6 +1,6 @@
 import 'dart:convert';
+import 'package:application/pages/category_page.dart';
 import 'package:application/pages/create_category_page.dart';
-import 'package:application/widgets/category_box.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
@@ -36,6 +36,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  int _selectedIndex = 0; // Track selected tab index
   List<dynamic> categories = [];
   bool isLoading = true;
   final TextEditingController searchController = TextEditingController();
@@ -43,22 +44,14 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    fetchCategories();
-    searchController
-        .addListener(_onSearchChanged); // Listen for changes in search field
   }
 
-  // Fetch categories from API with optional search query
   Future<void> fetchCategories({String searchQuery = ''}) async {
-    // Default to the categories endpoint
     String apiUrl = "${dotenv.env['API_URL']}/category";
-
-    // If search query is provided, switch to the search endpoint
     if (searchQuery.isNotEmpty) {
       apiUrl = "${dotenv.env['API_URL']}/category/search";
     }
 
-    // Create the URI with the search query (if provided)
     final Uri uri =
         Uri.parse(apiUrl).replace(queryParameters: {'q': searchQuery});
 
@@ -88,94 +81,22 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  // Called whenever the search query changes
-  void _onSearchChanged() {
-    final query = searchController.text.trim();
-    fetchCategories(
-        searchQuery: query); // Fetch categories based on the search query
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
-  Future<bool> updateCategory(int categoryId, String newName) async {
-    final apiUrl = "${dotenv.env['API_URL']}/category/$categoryId";
-    try {
-      final response = await http.put(
-        Uri.parse(apiUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({'category_name': newName}),
-      );
-
-      if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${responseData['message']}')),
-        );
-        return true; // Success
-      } else if (response.statusCode >= 400 && response.statusCode < 500) {
-        final errorData = json.decode(response.body);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${errorData['message']}')),
-        );
-        return false; //Failure
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${response.body}')),
-        );
-        return false; //Failure
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Exception: $e')),
-      );
-      return false; // Failure
-    }
-  }
-
-  Future<void> deleteCategory(int categoryId, int index) async {
-    final confirmed = await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('ລົບໝວດໝູ່'),
-        content: const Text('ທ່ານຕ້ອງການລົບໝວດໝູ່ນີ້ແທ້ ຫຼື ບໍ່?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('ຍົກເລີກ'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('ລົບ', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+  Widget _buildProfileScreen() {
+    return const Center(
+      child: Text('ຂໍ້ມູນສິນຄ້າທັງໝົດ', style: TextStyle(fontSize: 20)),
     );
+  }
 
-    if (confirmed == true) {
-      // Call the API to delete the category
-      final apiUrl = "${dotenv.env['API_URL']}/category/$categoryId";
-      final response = await http.delete(Uri.parse(apiUrl));
-
-      if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
-        // Remove the category from the list
-        setState(() {
-          categories.removeAt(index);
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${responseData['message']}')),
-        );
-      } else if (response.statusCode >= 400 && response.statusCode < 500) {
-        final errorData = json.decode(response.body);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${errorData['message']}')),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${response.body}')),
-        );
-      }
-    }
+  Widget _buildSettingsScreen() {
+    return const Center(
+      child: Text('ຂໍ້ມູນຫົວໜ່ວຍ', style: TextStyle(fontSize: 20)),
+    );
   }
 
   @override
@@ -185,89 +106,31 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text("ໝວດໝູ່"),
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              // Search Bar
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: searchController,
-                        decoration: const InputDecoration(
-                          hintText: 'ຄົ້ນຫາ...',
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        searchController.clear();
-                        fetchCategories();
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.search),
-                      onPressed: () {
-                        final query = searchController.text.trim();
-                        print('Searching for: $query');
-                        fetchCategories(searchQuery: query);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Category List
-              Expanded(
-                child: isLoading
-                    ? const Center(
-                        child: CircularProgressIndicator(),
-                      )
-                    : categories.isEmpty
-                        ? const Center(
-                            child: Text('ບໍ່ພົບໝວດໝູ່'),
-                          )
-                        : ListView.separated(
-                            itemCount: categories.length,
-                            separatorBuilder: (context, index) =>
-                                const SizedBox(height: 12),
-                            itemBuilder: (context, index) {
-                              final category = categories[index];
-                              return CategoryBox(
-                                categoryName: category['category_name'],
-                                onEdit: (newName) async {
-                                  // Handle update action
-                                  final updated = await updateCategory(
-                                      category['category_id'], newName);
-                                  if (updated) {
-                                    setState(() {
-                                      categories[index]['category_name'] =
-                                          newName; // Update the local list
-                                    });
-                                  }
-                                },
-                                onDelete: () {
-                                  deleteCategory(
-                                      category['category_id'], index);
-                                },
-                              );
-                            },
-                          ),
-              ),
-            ],
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: [
+          CategoryPage(),
+          _buildProfileScreen(),
+          _buildSettingsScreen(),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.category),
+            label: 'ໝວດໝູ່',
           ),
-        ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_cart_rounded),
+            label: 'ສິນຄ້າ',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.auto_awesome),
+            label: 'ຫົວໜ່ວຍ',
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -277,7 +140,6 @@ class _MyHomePageState extends State<MyHomePage> {
               builder: (context) => const CreateCategoryPage(),
             ),
           ).then((_) {
-            // Optional: Refresh the category list when returning
             fetchCategories();
           });
         },
