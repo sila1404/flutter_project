@@ -74,6 +74,8 @@ function selectProductByID(req, res) {
 function insertProduct(req, res) {
   const { product_name, quantity, price, sale_price, category_id, unit_id } =
     req.body;
+
+  // Check for required fields
   if (
     !product_name ||
     !sale_price ||
@@ -88,28 +90,51 @@ function insertProduct(req, res) {
     });
   }
 
+  // Check if sale price is valid
   if (sale_price < price) {
     return res.status(400).json({
       success: false,
-      message: "ກະລຸນາກຳນົດລາຄາຂາຍໃຫ້ຫຼາຍກວ່າລາຄາຊື້",
+      message: "ລາຄາຂາຍຕ້ອງສູງກວ່າລາຄາຊື້",
     });
   }
 
+  // Check for duplicate product with the same name and unit
   conn.query(
-    "INSERT INTO product (product_name, quantity, price, sale_price, category_id, unit_id) VALUES (?, ?, ?, ?, ?, ?)",
-    [product_name, quantity, price, sale_price, category_id, unit_id],
+    "SELECT * FROM product WHERE product_name = ? AND unit_id = ?",
+    [product_name, unit_id],
     (err, result) => {
       if (err) {
-        res.status(500).json({
+        return res.status(500).json({
           success: false,
           message: err.message,
         });
       }
 
-      res.status(201).json({
-        success: true,
-        message: "ສຳເລັດການເພີ່ມຂໍ້ມູນສິນຄ້າ",
-      });
+      if (result.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: "ສິນຄ້ານີ້ມີໃນລະບົບແລ້ວ, ກະລຸນາປ່ຽນຊື່ສິນຄ້າ ຫຼື ຫົວໜ່ວຍ",
+        });
+      }
+
+      // Proceed with insertion since no duplicates found
+      conn.query(
+        "INSERT INTO product (product_name, quantity, price, sale_price, category_id, unit_id) VALUES (?, ?, ?, ?, ?, ?)",
+        [product_name, quantity, price, sale_price, category_id, unit_id],
+        (err, result) => {
+          if (err) {
+            return res.status(500).json({
+              success: false,
+              message: err.message,
+            });
+          }
+
+          res.status(201).json({
+            success: true,
+            message: "ສຳເລັດການເພີ່ມຂໍ້ມູນສິນຄ້າ",
+          });
+        }
+      );
     }
   );
 }
@@ -142,10 +167,10 @@ function updateProduct(req, res) {
     });
   }
 
-  // Update product in database
+  // Check for duplicate product with the same name and unit
   conn.query(
-    "UPDATE product SET product_name = ?, quantity = ?, price = ?, sale_price = ?, category_id = ?, unit_id = ? WHERE product_id = ?",
-    [product_name, quantity, price, sale_price, category_id, unit_id, pID],
+    "SELECT * FROM product WHERE product_name = ? AND unit_id = ?",
+    [product_name, unit_id],
     (err, result) => {
       if (err) {
         return res.status(500).json({
@@ -154,17 +179,38 @@ function updateProduct(req, res) {
         });
       }
 
-      if (result.affectedRows === 0) {
-        return res.status(404).json({
+      if (result.length > 0) {
+        return res.status(400).json({
           success: false,
-          message: "ບໍ່ພົບຂໍ້ມູນສິນຄ້າທີ່ຕ້ອງການແກ້ໄຂ",
+          message: "ສິນຄ້ານີ້ມີໃນລະບົບແລ້ວ, ກະລຸນາປ່ຽນຊື່ສິນຄ້າ ຫຼື ຫົວໜ່ວຍ",
         });
       }
 
-      res.status(200).json({
-        success: true,
-        message: "ສຳເລັດການແກ້ໄຂຂໍ້ມູນສິນຄ້າ",
-      });
+      // Update product in database
+      conn.query(
+        "UPDATE product SET product_name = ?, quantity = ?, price = ?, sale_price = ?, category_id = ?, unit_id = ? WHERE product_id = ?",
+        [product_name, quantity, price, sale_price, category_id, unit_id, pID],
+        (err, result) => {
+          if (err) {
+            return res.status(500).json({
+              success: false,
+              message: err.message,
+            });
+          }
+
+          if (result.affectedRows === 0) {
+            return res.status(404).json({
+              success: false,
+              message: "ບໍ່ພົບຂໍ້ມູນສິນຄ້າທີ່ຕ້ອງການແກ້ໄຂ",
+            });
+          }
+
+          res.status(200).json({
+            success: true,
+            message: "ສຳເລັດການແກ້ໄຂຂໍ້ມູນສິນຄ້າ",
+          });
+        }
+      );
     }
   );
 }

@@ -51,19 +51,23 @@ function insertUnit(req, res) {
     });
   }
 
-  conn.query("INSERT INTO unit (unit_name) VALUES (?)", [unit_name], (err, result) => {
-    if (err) {
-      res.status(500).json({
-        success: false,
-        message: err.message,
+  conn.query(
+    "INSERT INTO unit (unit_name) VALUES (?)",
+    [unit_name],
+    (err, result) => {
+      if (err) {
+        res.status(500).json({
+          success: false,
+          message: err.message,
+        });
+      }
+
+      res.status(201).json({
+        success: true,
+        message: "ສຳເລັດການເພີ່ມຂໍ້ມູນຫົວໜ່ວຍ",
       });
     }
-
-    res.status(201).json({
-      success: true,
-      message: "ສຳເລັດການເພີ່ມຂໍ້ມູນຫົວໜ່ວຍ",
-    });
-  });
+  );
 }
 
 function updateUnit(req, res) {
@@ -113,7 +117,9 @@ function updateUnit(req, res) {
 
 function deleteUnit(req, res) {
   const { uID } = req.params;
-  conn.query("SELECT * FROM unit WHERE unit_id = ?", uID, (err, result) => {
+
+  // First check if unit exists
+  conn.query("SELECT * FROM unit WHERE unit_id = ?", uID, (err, unitResult) => {
     if (err) {
       return res.status(500).json({
         success: false,
@@ -121,17 +127,18 @@ function deleteUnit(req, res) {
       });
     }
 
-    if (!result[0]) {
+    if (!unitResult[0]) {
       return res.status(404).json({
         success: false,
         message: "ບໍ່ພົບຂໍ້ມູນຫົວໜ່ວຍດັ່ງກ່າວ",
       });
     }
 
+    // Check if unit has associated products
     conn.query(
-      "DELETE FROM unit WHERE unit_id = ?",
-      result[0].unit_id,
-      (err, result) => {
+      "SELECT COUNT(*) as productCount FROM product WHERE unit_id = ?",
+      uID,
+      (err, productResult) => {
         if (err) {
           return res.status(500).json({
             success: false,
@@ -139,9 +146,28 @@ function deleteUnit(req, res) {
           });
         }
 
-        return res.status(200).json({
-          success: true,
-          message: "ສຳເລັດການລົບຫົວໜ່ວຍ",
+        if (productResult[0].productCount > 0) {
+          return res.status(400).json({
+            success: false,
+            message: "ບໍ່ສາມາດລົບຫົວໜ່ວຍນີ້ໄດ້ ເນື່ອງຈາກມີສິນຄ້າທີ່ກ່ຽວຂ້ອງຢູ່",
+            hasProducts: true,
+            productCount: productResult[0].productCount,
+          });
+        }
+
+        // If no associated products, proceed with deletion
+        conn.query("DELETE FROM unit WHERE unit_id = ?", uID, (err, result) => {
+          if (err) {
+            return res.status(500).json({
+              success: false,
+              message: err.message,
+            });
+          }
+
+          return res.status(200).json({
+            success: true,
+            message: "ສຳເລັດການລົບຫົວໜ່ວຍ",
+          });
         });
       }
     );
