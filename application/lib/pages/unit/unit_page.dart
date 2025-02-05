@@ -15,17 +15,28 @@ class UnitPage extends StatefulWidget {
 class _UnitPageState extends State<UnitPage> {
   List<dynamic> units = [];
   bool isLoading = true;
+  final TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     fetchUnit();
+    searchController.addListener(_onSearchChanged);
   }
 
-  Future<void> fetchUnit() async {
-    String apiUrl = "${dotenv.env['API_URL']}/unit";
+  void _onSearchChanged() {
+    final query = searchController.text.trim();
+    fetchUnit(searchQuery: query);
+  }
 
-    final Uri uri = Uri.parse(apiUrl);
+  Future<void> fetchUnit({String searchQuery = ''}) async {
+    String apiUrl = "${dotenv.env['API_URL']}/unit";
+    if (searchQuery.isNotEmpty) {
+      apiUrl = "${dotenv.env['API_URL']}/unit/search";
+    }
+
+    final Uri uri =
+        Uri.parse(apiUrl).replace(queryParameters: {'q': searchQuery});
 
     setState(() {
       isLoading = true;
@@ -162,6 +173,42 @@ class _UnitPageState extends State<UnitPage> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
+              // Search Bar
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: searchController,
+                        decoration: const InputDecoration(
+                          hintText: 'ຄົ້ນຫາ ຫົວໜ່ວຍ...',
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        searchController.clear();
+                        fetchUnit();
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.search),
+                      onPressed: () {
+                        final query = searchController.text.trim();
+                        fetchUnit(searchQuery: query);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
               // Category List
               Expanded(
                 child: isLoading

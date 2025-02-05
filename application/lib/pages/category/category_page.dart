@@ -186,7 +186,7 @@ class _CategoryPageState extends State<CategoryPage> {
                       child: TextField(
                         controller: searchController,
                         decoration: const InputDecoration(
-                          hintText: 'ຄົ້ນຫາ...',
+                          hintText: 'ຄົ້ນຫາ ໝວດໝູ່...',
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(horizontal: 16),
                         ),

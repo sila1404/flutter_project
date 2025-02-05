@@ -55,9 +55,10 @@ function insertCategory(req, res) {
       message: "ກະລຸນາໃສ່ຊື່ໝວດໝູ່",
     });
   }
+
   conn.query(
-    "INSERT INTO category (category_name) VALUES (?)",
-    [category_name],
+    "SELECT * FROM category WHERE category_name = ?",
+    category_name,
     (err, result) => {
       if (err) {
         return res.status(500).json({
@@ -66,10 +67,30 @@ function insertCategory(req, res) {
         });
       }
 
-      return res.status(201).json({
-        success: true,
-        message: "ສຳເລັດການເພີ່ມຂໍ້ມູນໝວດໝູ່",
-      });
+      if (result[0]) {
+        return res.status(400).json({
+          success: false,
+          message: "ໝວດໝູ່ນີ້ມີໃນລະບົບແລ້ວ, ກະລຸນາສ້າງໝວດໝູ່ໃໝ່",
+        });
+      }
+
+      conn.query(
+        "INSERT INTO category (category_name) VALUES (?)",
+        [category_name],
+        (err, result) => {
+          if (err) {
+            return res.status(500).json({
+              success: false,
+              message: err.message,
+            });
+          }
+
+          return res.status(201).json({
+            success: true,
+            message: "ສຳເລັດການເພີ່ມຂໍ້ມູນໝວດໝູ່",
+          });
+        }
+      );
     }
   );
 }
@@ -103,8 +124,8 @@ function updateCategory(req, res) {
       }
 
       conn.query(
-        "UPDATE category SET category_name = ? WHERE category_id = ?",
-        [category_name, result[0].category_id],
+        "SELECT * FROM category WHERE category_name = ?",
+        category_name,
         (err, result) => {
           if (err) {
             return res.status(500).json({
@@ -113,10 +134,30 @@ function updateCategory(req, res) {
             });
           }
 
-          return res.status(200).json({
-            success: true,
-            message: "ສຳເລັດການແກ້ໄຂຂໍ້ມູນໝວດໝູ່",
-          });
+          if (result[0]) {
+            return res.status(400).json({
+              success: false,
+              message: "ໝວດໝູ່ນີ້ມີໃນລະບົບແລ້ວ, ກະລຸນາສ້າງໝວດໝູ່ໃໝ່",
+            });
+          }
+
+          conn.query(
+            "UPDATE category SET category_name = ? WHERE category_id = ?",
+            [category_name, cID],
+            (err, result) => {
+              if (err) {
+                return res.status(500).json({
+                  success: false,
+                  message: err.message,
+                });
+              }
+
+              return res.status(200).json({
+                success: true,
+                message: "ສຳເລັດການແກ້ໄຂຂໍ້ມູນໝວດໝູ່",
+              });
+            }
+          );
         }
       );
     }

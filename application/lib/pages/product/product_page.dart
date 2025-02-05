@@ -15,17 +15,28 @@ class ProductPage extends StatefulWidget {
 class _ProductPageState extends State<ProductPage> {
   List<dynamic> products = [];
   bool isLoading = true;
+  final TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     fetchProduct();
+    searchController.addListener(_onSearchChanged);
   }
 
-  Future<void> fetchProduct() async {
-    String apiUrl = "${dotenv.env['API_URL']}/product";
+  void _onSearchChanged() {
+    final query = searchController.text.trim();
+    fetchProduct(searchQuery: query);
+  }
 
-    final Uri uri = Uri.parse(apiUrl);
+  Future<void> fetchProduct({String searchQuery = ''}) async {
+    String apiUrl = "${dotenv.env['API_URL']}/product";
+    if (searchQuery.isNotEmpty) {
+      apiUrl = "${dotenv.env['API_URL']}/product/search";
+    }
+
+    final Uri uri =
+        Uri.parse(apiUrl).replace(queryParameters: {'q': searchQuery});
 
     setState(() {
       isLoading = true;
@@ -114,6 +125,42 @@ class _ProductPageState extends State<ProductPage> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
+              // Search Bar
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: searchController,
+                        decoration: const InputDecoration(
+                          hintText: 'ຄົ້ນຫາ ສິນຄ້າ...',
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        searchController.clear();
+                        fetchProduct();
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.search),
+                      onPressed: () {
+                        final query = searchController.text.trim();
+                        fetchProduct(searchQuery: query);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
               // Category List
               Expanded(
                 child: isLoading

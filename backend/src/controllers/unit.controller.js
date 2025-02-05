@@ -52,20 +52,40 @@ function insertUnit(req, res) {
   }
 
   conn.query(
-    "INSERT INTO unit (unit_name) VALUES (?)",
-    [unit_name],
+    "SELECT * FROM unit WHERE unit_name = ?",
+    unit_name,
     (err, result) => {
       if (err) {
-        res.status(500).json({
+        return res.status(500).json({
           success: false,
           message: err.message,
         });
       }
 
-      res.status(201).json({
-        success: true,
-        message: "ສຳເລັດການເພີ່ມຂໍ້ມູນຫົວໜ່ວຍ",
-      });
+      if (result[0]) {
+        return res.status(400).json({
+          success: false,
+          message: "ຫົວໜ່ວຍນີ້ມີໃນລະບົບແລ້ວ, ກະລຸນາສ້າງຫົວໜ່ວຍໃໝ່",
+        });
+      }
+
+      conn.query(
+        "INSERT INTO unit (unit_name) VALUES (?)",
+        [unit_name],
+        (err, result) => {
+          if (err) {
+            res.status(500).json({
+              success: false,
+              message: err.message,
+            });
+          }
+
+          res.status(201).json({
+            success: true,
+            message: "ສຳເລັດການເພີ່ມຂໍ້ມູນຫົວໜ່ວຍ",
+          });
+        }
+      );
     }
   );
 }
@@ -96,8 +116,8 @@ function updateUnit(req, res) {
     }
 
     conn.query(
-      "UPDATE unit SET unit_name = ? WHERE unit_id = ?",
-      [unit_name, result[0].unit_id],
+      "SELECT * FROM unit WHERE unit_name = ?",
+      unit_name,
       (err, result) => {
         if (err) {
           return res.status(500).json({
@@ -106,10 +126,30 @@ function updateUnit(req, res) {
           });
         }
 
-        return res.status(200).json({
-          success: true,
-          message: "ສຳເລັດການແກ້ໄຂຂໍ້ມູນຫົວໜ່ວຍ",
-        });
+        if (result[0]) {
+          return res.status(400).json({
+            success: false,
+            message: "ຫົວໜ່ວຍນີ້ມີໃນລະບົບແລ້ວ, ກະລຸນາສ້າງຫົວໜ່ວຍໃໝ່",
+          });
+        }
+
+        conn.query(
+          "UPDATE unit SET unit_name = ? WHERE unit_id = ?",
+          [unit_name, uID],
+          (err, result) => {
+            if (err) {
+              return res.status(500).json({
+                success: false,
+                message: err.message,
+              });
+            }
+
+            return res.status(200).json({
+              success: true,
+              message: "ສຳເລັດການແກ້ໄຂຂໍ້ມູນຫົວໜ່ວຍ",
+            });
+          }
+        );
       }
     );
   });
@@ -174,4 +214,48 @@ function deleteUnit(req, res) {
   });
 }
 
-export { selectAllUnit, selectUnitByID, insertUnit, updateUnit, deleteUnit };
+function searchUnit(req, res) {
+  const { q } = req.query;
+
+  if (!q) {
+    return res.status(400).json({
+      success: false,
+      message: "ກະລຸນາໃສ່ຄຳຄົ້ນຫາ",
+    });
+  }
+
+  conn.query(
+    "SELECT * FROM unit WHERE unit_name LIKE ?",
+    [`%${q}%`],
+    (err, result) => {
+      if (err) {
+        return res.status(500).json({
+          success: false,
+          message: err.message,
+        });
+      }
+
+      if (result.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "ບໍ່ພົບຂໍ້ມູນຫົວໜ່ວຍທີ່ກ່ຽວຂ້ອງ",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "ສຳເລັດການຄົ້ນຫາຂໍ້ມູນຫົວໜ່ວຍ",
+        data: result,
+      });
+    }
+  );
+}
+
+export {
+  selectAllUnit,
+  selectUnitByID,
+  insertUnit,
+  updateUnit,
+  deleteUnit,
+  searchUnit,
+};

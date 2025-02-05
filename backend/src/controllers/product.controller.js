@@ -256,10 +256,48 @@ function deleteProduct(req, res) {
   );
 }
 
+function searchProduct(req, res) {
+  const { q } = req.query;
+
+  if (!q) {
+    return res.status(400).json({
+      success: false,
+      message: "ກະລຸນາໃສ່ຄຳຄົ້ນຫາ",
+    });
+  }
+
+  conn.query(
+    "SELECT * FROM product WHERE product_name LIKE ?",
+    [`%${q}%`],
+    (err, result) => {
+      if (err) {
+        return res.status(500).json({
+          success: false,
+          message: err.message,
+        });
+      }
+
+      if (result.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "ບໍ່ພົບຂໍ້ມູນສິນຄ້າທີ່ກ່ຽວຂ້ອງ",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "ສຳເລັດການຄົ້ນຫາຂໍ້ມູນສິນຄ້າ",
+        data: result,
+      });
+    }
+  );
+}
+
 export {
   selectAllProduct,
   selectProductByID,
   insertProduct,
   updateProduct,
   deleteProduct,
+  searchProduct
 };

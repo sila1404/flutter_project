@@ -1,19 +1,20 @@
 import express from "express";
 import {
-	selectAllProduct,
-	deleteProduct,
-	insertProduct,
-	selectProductByID,
-	updateProduct,
+  selectAllProduct,
+  deleteProduct,
+  insertProduct,
+  selectProductByID,
+  updateProduct,
+  searchProduct,
 } from "../controllers/product.controller";
 
+const router = express.Router();
 
-const router = express.Router()
+router.get("/", selectAllProduct);
+router.get("/search", searchProduct);
+router.get("/:pID", selectProductByID);
+router.post("/", insertProduct);
+router.put("/:pID", updateProduct);
+router.delete("/:pID", deleteProduct);
 
-router.get("/", selectAllProduct)
-router.get("/:pID", selectProductByID)
-router.post("/", insertProduct)
-router.put("/:pID", updateProduct)
-router.delete("/:pID", deleteProduct)
-
-export default router
+export default router;
